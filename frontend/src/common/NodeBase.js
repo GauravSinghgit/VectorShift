@@ -44,7 +44,7 @@ export const NodeBase = ({
   const maxHandles = Math.max(inputs.length, outputs.length, 1);
   const headerHeight = 40;
   const bodyMinHeight = 40;
-  const handleSpacing = 24;
+  const handleSpacing = 28;
   const minNodeHeight = headerHeight + bodyMinHeight + maxHandles * handleSpacing;
 
   return (
@@ -80,7 +80,7 @@ export const NodeBase = ({
 
       {/* Input handles */}
       {inputs.map((h, idx) => {
-        const topPx = headerHeight + 20 + idx * handleSpacing;
+        const topPx = Math.round(headerHeight / 2) + idx * handleSpacing;
         return (
           <React.Fragment key={`in-${h.id}`}>
             <Handle
@@ -114,7 +114,7 @@ export const NodeBase = ({
 
       {/* Output handles */}
       {outputs.map((h, idx) => {
-        const topPx = headerHeight + 20 + idx * handleSpacing;
+       const topPx = Math.round(headerHeight / 2) + idx * handleSpacing;
         return (
           <React.Fragment key={`out-${h.id}`}>
             <Handle

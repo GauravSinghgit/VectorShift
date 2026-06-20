@@ -1,9 +1,5 @@
 // ConfigPanel.js
-// Right-side configuration drawer — opens when a node is selected.
-// Shows full-size form fields for the selected node's config.
-// ─────────────────────────────────────────────────────────────
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';   // remove useState, useEffect
 import { useStore } from '../store';
 import { nodeConfigs } from '../nodeRegistry';
 import { FieldRenderer } from './FieldRenderer';
@@ -17,24 +13,9 @@ export const ConfigPanel = () => {
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const config = selectedNode ? nodeConfigs[selectedNode.type] : null;
 
-  // Local field values for the panel form
-  const [values, setValues] = useState({});
-
-  // Sync local values when selected node changes
-  useEffect(() => {
-    if (selectedNode && config) {
-      const v = {};
-      (config.fields || []).forEach((f) => {
-        v[f.key] = selectedNode.data?.[f.key] ?? f.defaultValue ?? '';
-      });
-      setValues(v);
-    }
-  }, [selectedNodeId, selectedNode, config]);
-
   const handleFieldChange = useCallback((key, newValue) => {
-    setValues((prev) => ({ ...prev, [key]: newValue }));
     if (selectedNodeId) {
-      updateNodeField(selectedNodeId, key, newValue);
+      updateNodeField(selectedNodeId, key, newValue);  // write to store
     }
   }, [selectedNodeId, updateNodeField]);
 
@@ -60,14 +41,13 @@ export const ConfigPanel = () => {
             <FieldRenderer
               key={field.key}
               field={field}
-              value={values[field.key]}
+              value={selectedNode.data?.[field.key] ?? field.defaultValue ?? ''}  // read from store
               onChange={(v) => handleFieldChange(field.key, v)}
               compact={false}
             />
           ))}
         </div>
 
-        {/* Connection info */}
         <div className="config-panel-section">
           <div className="config-panel-section-title">Connections</div>
           {config.inputs.length > 0 && (
@@ -81,19 +61,13 @@ export const ConfigPanel = () => {
           {config.outputs.length > 0 && (
             <div className="field-group">
               <div className="field-label">Outputs</div>
-              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
+              <div style={{ fontSize: 'var(--color-text-muted)' }}>
                 {config.outputs.map((h) => h.label).join(', ')}
               </div>
             </div>
           )}
-          {config.inputs.length === 0 && config.outputs.length === 0 && (
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-dim)' }}>
-              No connections configured.
-            </div>
-          )}
         </div>
 
-        {/* Node ID */}
         <div className="config-panel-section">
           <div className="config-panel-section-title">Info</div>
           <div className="field-group">

@@ -77,16 +77,18 @@ export const useStore = create((set, get) => ({
     ),
   });
 },
-  updateNodeField: (nodeId, fieldName, fieldValue) => {
-    set({
-      nodes: get().nodes.map((node) => {
-        if (node.id === nodeId) {
-          node.data = { ...node.data, [fieldName]: fieldValue };
-        }
-        return node;
-      }),
-    });
-  },
+  
+updateNodeField: (nodeId, fieldName, fieldValue) => {
+  set({
+    nodes: get().nodes.map((node) => {
+      if (node.id === nodeId) {
+        return { ...node, data: { ...node.data, [fieldName]: fieldValue } };
+        
+      }
+      return node;
+    }),
+  });
+},
 
   setSelectedNodeId: (id) => {
     set({ selectedNodeId: id });
@@ -94,9 +96,6 @@ export const useStore = create((set, get) => ({
 
   // ── NEW: Deletion actions ──────────────────────────────────
 
-  /**
-   * Remove a node by id AND all edges connected to it.
-   */
   deleteNode: (nodeId) => {
     const { nodes, edges, selectedNodeId } = get();
     set({

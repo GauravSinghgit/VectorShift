@@ -81,10 +81,12 @@ const DeletableEdge = ({
           <button
             className="edge-delete-btn"
             style={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-              pointerEvents: 'all',
-            }}
+            position: 'absolute',
+            left: labelX,
+            top: labelY,
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'all',
+           }}
             onClick={(e) => {
               e.stopPropagation();
               deleteEdge(id);

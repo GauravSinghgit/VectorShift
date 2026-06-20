@@ -366,6 +366,8 @@ code {
   transition: box-shadow var(--transition-base), border-color var(--transition-base);
   overflow: visible;
   position: relative;
+  margin-left: 48px;   
+  margin-right: 48px;
 }
 
 .node-card:hover {
@@ -497,7 +499,6 @@ code {
 }
 
 .edge-delete-btn:hover {
-  transform: translate(-50%, -50%) !important;
   background: var(--color-text-dim);
 }
 
@@ -637,14 +638,15 @@ code {
 }
 
 .handle-label-left {
-  left: 14px;
+  left: -44px;          
   transform: translateY(-50%);
+  text-align: right;
 }
 
 .handle-label-right {
-  right: 14px;
+  right: -44px;         
   transform: translateY(-50%);
-  text-align: right;
+  text-align: left;
 }
 
 /* ── Buttons ───────────────────────────────────────────────── */
