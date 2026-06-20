@@ -458,13 +458,13 @@ code {
   position: absolute;
   top: -8px;
   right: -8px;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: var(--color-error);
-  color: white;
+  background: var(--color-text-dim);
+  color: var(--color-surface);
   border: 2px solid var(--color-surface);
-  font-size: 10px;
+  font-size: 9px;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -472,23 +472,21 @@ code {
   cursor: pointer;
   z-index: 10;
   padding: 0;
-  transition: transform var(--transition-fast), background var(--transition-fast);
 }
 
 .node-delete-btn:hover {
-  transform: scale(1.2);
-  background: #dc2626;
+  background: var(--color-text-dim);  /* explicitly same as default — no color change */
 }
 
 /* ── Edge Delete Button ────────────────────────────────────── */
 .edge-delete-btn {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: var(--color-error);
-  color: white;
+  background: var(--color-text-dim);
+  color: var(--color-surface);
   border: 2px solid var(--color-surface);
-  font-size: 10px;
+  font-size: 9px;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -496,12 +494,11 @@ code {
   cursor: pointer;
   z-index: 10;
   padding: 0;
-  transition: transform var(--transition-fast), background var(--transition-fast);
 }
 
 .edge-delete-btn:hover {
-  transform: translate(-50%, -50%) scale(1.2) !important;
-  background: #dc2626;
+  transform: translate(-50%, -50%) !important;
+  background: var(--color-text-dim);
 }
 
 /* ── Field Styles ──────────────────────────────────────────── */

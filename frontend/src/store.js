@@ -48,23 +48,35 @@ export const useStore = create((set, get) => ({
   },
 
   onConnect: (connection) => {
-    set({
-      edges: addEdge(
-        {
-          ...connection,
-          type: 'deletableEdge',
-          animated: true,
-          markerEnd: {
-            type: MarkerType.Arrow,
-            height: '20px',
-            width: '20px',
-          },
-        },
-        get().edges
-      ),
-    });
-  },
+  const { edges } = get();
 
+  // Prevent duplicate edges between the same source/target handle pair
+  const alreadyExists = edges.some(
+    (e) =>
+      e.source === connection.source &&
+      e.target === connection.target &&
+      e.sourceHandle === connection.sourceHandle &&
+      e.targetHandle === connection.targetHandle
+  );
+  if (alreadyExists) return;
+
+  set({
+    edges: addEdge(
+      {
+        ...connection,
+        type: 'deletableEdge',
+        animated: true,
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          height: 20,   // number, not string
+          width: 20,    // number, not string
+          color: 'var(--color-border-hover)',
+        },
+      },
+      edges
+    ),
+  });
+},
   updateNodeField: (nodeId, fieldName, fieldValue) => {
     set({
       nodes: get().nodes.map((node) => {

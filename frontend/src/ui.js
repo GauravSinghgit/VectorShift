@@ -48,30 +48,34 @@ const DeletableEdge = ({
     targetPosition,
   });
 
+  // ONE handler for the whole edge group — no more racing listeners
+  const handleEnter = () => setHovered(true);
+  const handleLeave = () => setHovered(false);
+
   return (
     <>
-      {/* Invisible wider path for easier hover detection */}
-      <path
-        d={edgePath}
-        fill="none"
-        stroke="transparent"
-        strokeWidth={20}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      />
-      {/* Visible edge path */}
-      <path
-        d={edgePath}
-        fill="none"
-        stroke={selected ? 'var(--color-primary)' : 'var(--color-border-hover)'}
-        strokeWidth={selected ? 2.5 : 2}
-        markerEnd={markerEnd}
-        className="react-flow__edge-path"
-        style={style}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      />
-      {/* Delete button at edge midpoint */}
+      {/* Single group owns hover state for path + invisible hit area */}
+      <g onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+        <path
+          d={edgePath}
+          fill="none"
+          stroke="transparent"
+          strokeWidth={20}
+        />
+        <path
+          d={edgePath}
+          fill="none"
+          stroke={selected ? 'var(--color-primary)' : 'var(--color-border-hover)'}
+          strokeWidth={selected ? 2.5 : 2}
+          markerEnd={markerEnd}
+          className="react-flow__edge-path"
+          style={style}
+        />
+      </g>
+
+      {/* Button is now OUTSIDE the hover group's mouseleave trigger zone logic —
+          it stays visible because `hovered` only changes when leaving the <g>,
+          and the button sits visually on top of the path, not beside it */}
       {(hovered || selected) && (
         <EdgeLabelRenderer>
           <button
@@ -85,8 +89,8 @@ const DeletableEdge = ({
               e.stopPropagation();
               deleteEdge(id);
             }}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
+            onMouseEnter={handleEnter}
+            onMouseLeave={handleLeave}
             title="Delete edge"
           >
             ✕
