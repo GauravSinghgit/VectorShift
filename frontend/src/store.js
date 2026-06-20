@@ -1,8 +1,8 @@
 // store.js
 // Zustand store for pipeline state.
-// Preserves existing contract: nodes, edges, getNodeID, addNode,
-// onNodesChange, onEdgesChange, onConnect, updateNodeField.
-// Adds: selectedNodeId, setSelectedNodeId.
+// Contract: nodes, edges, getNodeID, addNode, onNodesChange, onEdgesChange,
+//           onConnect, updateNodeField, selectedNodeId, setSelectedNodeId.
+// Added:    deleteNode, deleteEdge, clearCanvas.
 // ─────────────────────────────────────────────────────────────
 
 import { create } from "zustand";
@@ -52,7 +52,7 @@ export const useStore = create((set, get) => ({
       edges: addEdge(
         {
           ...connection,
-          type: 'smoothstep',
+          type: 'deletableEdge',
           animated: true,
           markerEnd: {
             type: MarkerType.Arrow,
@@ -78,5 +78,39 @@ export const useStore = create((set, get) => ({
 
   setSelectedNodeId: (id) => {
     set({ selectedNodeId: id });
+  },
+
+  // ── NEW: Deletion actions ──────────────────────────────────
+
+  /**
+   * Remove a node by id AND all edges connected to it.
+   */
+  deleteNode: (nodeId) => {
+    const { nodes, edges, selectedNodeId } = get();
+    set({
+      nodes: nodes.filter((n) => n.id !== nodeId),
+      edges: edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
+      selectedNodeId: selectedNodeId === nodeId ? null : selectedNodeId,
+    });
+  },
+
+  /**
+   * Remove a single edge by id.
+   */
+  deleteEdge: (edgeId) => {
+    set({
+      edges: get().edges.filter((e) => e.id !== edgeId),
+    });
+  },
+
+  /**
+   * Clear the entire canvas (all nodes + edges).
+   */
+  clearCanvas: () => {
+    set({
+      nodes: [],
+      edges: [],
+      selectedNodeId: null,
+    });
   },
 }));

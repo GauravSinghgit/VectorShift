@@ -1,11 +1,11 @@
 /* ============================================================
    VectorShift Pipeline Editor — Design System
-   CSS Variables + Dark Theme + Utility Classes
+   CSS Variables + Dark/Light Theme + Utility Classes
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* ── Design Tokens ─────────────────────────────────────────── */
+/* ── Design Tokens (Dark = default) ───────────────────────── */
 :root {
   /* Colors — Dark Theme */
   --color-bg:            #0f1117;
@@ -73,6 +73,43 @@
   --transition-fast: 0.15s ease;
   --transition-base: 0.2s ease;
   --transition-slow: 0.3s ease-out;
+}
+
+/* ── Light Theme Override ─────────────────────────────────── */
+[data-theme="light"] {
+  --color-bg:            #f8fafc;
+  --color-surface:       #ffffff;
+  --color-surface-2:     #f1f5f9;
+  --color-surface-3:     #e2e8f0;
+  --color-border:        #cbd5e1;
+  --color-border-hover:  #94a3b8;
+  --color-text:          #1e293b;
+  --color-text-muted:    #64748b;
+  --color-text-dim:      #94a3b8;
+  --color-primary:       #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-glow:  rgba(99, 102, 241, 0.12);
+  --color-success:       #059669;
+  --color-success-glow:  rgba(5, 150, 105, 0.1);
+  --color-error:         #dc2626;
+  --color-error-glow:    rgba(220, 38, 38, 0.1);
+  --color-warning:       #d97706;
+  --color-warning-glow:  rgba(217, 119, 6, 0.1);
+
+  /* Accent colors — kept recognizable, minor contrast adjust */
+  --accent-input:     #2563eb;
+  --accent-output:    #7c3aed;
+  --accent-transform: #d97706;
+  --accent-action:    #dc2626;
+  --accent-llm:       #059669;
+  --accent-text:      #0891b2;
+
+  /* Lighter shadows for light backgrounds */
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg:  0 8px 24px rgba(0, 0, 0, 0.1);
+  --shadow-xl:  0 12px 36px rgba(0, 0, 0, 0.12);
+  --shadow-glow-primary: 0 0 20px rgba(99, 102, 241, 0.15);
 }
 
 /* ── Base Reset ────────────────────────────────────────────── */
@@ -414,6 +451,57 @@ code {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 240px;
+}
+
+/* ── Node Delete Button ────────────────────────────────────── */
+.node-delete-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-error);
+  color: white;
+  border: 2px solid var(--color-surface);
+  font-size: 10px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  padding: 0;
+  transition: transform var(--transition-fast), background var(--transition-fast);
+}
+
+.node-delete-btn:hover {
+  transform: scale(1.2);
+  background: #dc2626;
+}
+
+/* ── Edge Delete Button ────────────────────────────────────── */
+.edge-delete-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-error);
+  color: white;
+  border: 2px solid var(--color-surface);
+  font-size: 10px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  padding: 0;
+  transition: transform var(--transition-fast), background var(--transition-fast);
+}
+
+.edge-delete-btn:hover {
+  transform: translate(-50%, -50%) scale(1.2) !important;
+  background: #dc2626;
 }
 
 /* ── Field Styles ──────────────────────────────────────────── */

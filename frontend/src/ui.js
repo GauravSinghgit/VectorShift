@@ -1,9 +1,10 @@
 // ui.js
-// ReactFlow canvas with auto-registered node types from nodeRegistry.
+// ReactFlow canvas with auto-registered node types, custom deletable edge,
+// and manual keyboard delete (fixes the textarea/backspace conflict).
 // ─────────────────────────────────────────────────────────────
 
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import ReactFlow, { Controls, Background, MiniMap } from 'reactflow';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import ReactFlow, { Controls, Background, MiniMap, getSmoothStepPath, EdgeLabelRenderer } from 'reactflow';
 import { useStore } from './store';
 import { shallow } from 'zustand/shallow';
 import { getNodeTypes, nodeConfigs } from './nodeRegistry';
@@ -14,14 +15,93 @@ const gridSize = 20;
 const proOptions = { hideAttribution: true };
 
 const defaultEdgeOptions = {
-  type: 'smoothstep',
+  type: 'deletableEdge',
   animated: true,
   style: {
-    stroke: '#4a5068',
+    stroke: 'var(--color-border-hover)',
     strokeWidth: 2,
   },
 };
 
+// ── Custom Edge with delete button ─────────────────────────
+const DeletableEdge = ({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  style = {},
+  markerEnd,
+  selected,
+}) => {
+  const [hovered, setHovered] = useState(false);
+  const deleteEdge = useStore((s) => s.deleteEdge);
+
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+  });
+
+  return (
+    <>
+      {/* Invisible wider path for easier hover detection */}
+      <path
+        d={edgePath}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={20}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      />
+      {/* Visible edge path */}
+      <path
+        d={edgePath}
+        fill="none"
+        stroke={selected ? 'var(--color-primary)' : 'var(--color-border-hover)'}
+        strokeWidth={selected ? 2.5 : 2}
+        markerEnd={markerEnd}
+        className="react-flow__edge-path"
+        style={style}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      />
+      {/* Delete button at edge midpoint */}
+      {(hovered || selected) && (
+        <EdgeLabelRenderer>
+          <button
+            className="edge-delete-btn"
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              pointerEvents: 'all',
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteEdge(id);
+            }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            title="Delete edge"
+          >
+            ✕
+          </button>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+};
+
+const edgeTypes = {
+  deletableEdge: DeletableEdge,
+};
+
+// ── Store selector ──────────────────────────────────────────
 const selector = (state) => ({
   nodes: state.nodes,
   edges: state.edges,
@@ -31,9 +111,11 @@ const selector = (state) => ({
   onEdgesChange: state.onEdgesChange,
   onConnect: state.onConnect,
   setSelectedNodeId: state.setSelectedNodeId,
+  deleteNode: state.deleteNode,
+  deleteEdge: state.deleteEdge,
 });
 
-export const PipelineUI = () => {
+export const PipelineUI = ({ theme }) => {
   const reactFlowWrapper = useRef(null);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const {
@@ -45,6 +127,8 @@ export const PipelineUI = () => {
     onEdgesChange,
     onConnect,
     setSelectedNodeId,
+    deleteNode,
+    deleteEdge,
   } = useStore(selector, shallow);
 
   // Build nodeTypes once from registry
@@ -103,26 +187,46 @@ export const PipelineUI = () => {
     setSelectedNodeId(null);
   }, [setSelectedNodeId]);
 
-  // Keyboard handler for delete
+  // ── Manual keyboard delete ────────────────────────────────
+  // We do NOT set deleteKeyCode on ReactFlow. Instead we handle delete
+  // ourselves, checking document.activeElement to avoid deleting nodes
+  // when the user is typing in an input/textarea/select.
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Ignore if user is typing in an input/textarea/select
-      const tag = e.target.tagName.toLowerCase();
-      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
 
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        // ReactFlow handles this natively if deleteKeyCode is set
+      // If user is focused on a text-entry element, don't delete nodes/edges
+      const active = document.activeElement;
+      if (active) {
+        const tag = active.tagName.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+        if (active.isContentEditable) return;
       }
+
+      // Delete all selected nodes (which also removes their edges via deleteNode)
+      const { nodes: currentNodes, edges: currentEdges } = useStore.getState();
+      const selectedNodes = currentNodes.filter((n) => n.selected);
+      const selectedEdges = currentEdges.filter((e) => e.selected);
+
+      selectedNodes.forEach((n) => deleteNode(n.id));
+      selectedEdges.forEach((e) => deleteEdge(e.id));
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [deleteNode, deleteEdge]);
 
   // MiniMap node color by category
   const minimapNodeColor = (node) => {
     const config = nodeConfigs[node.type];
     return config?.accentColor || '#6366f1';
   };
+
+  // Theme-aware MiniMap colors (avoid hardcoded hex)
+  const isDark = theme === 'dark';
+  const minimapMaskColor = isDark ? 'rgba(15, 17, 23, 0.7)' : 'rgba(255, 255, 255, 0.7)';
+  const minimapBg = isDark ? '#1a1d27' : '#f1f5f9';
+  const bgDotColor = isDark ? '#2e3348' : '#cbd5e1';
 
   return (
     <div ref={reactFlowWrapper} className="canvas-wrapper">
@@ -138,19 +242,20 @@ export const PipelineUI = () => {
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         proOptions={proOptions}
         defaultEdgeOptions={defaultEdgeOptions}
         snapGrid={[gridSize, gridSize]}
         connectionLineType="smoothstep"
-        deleteKeyCode={['Delete', 'Backspace']}
+        deleteKeyCode={null}
         fitView
       >
-        <Background color="#2e3348" gap={gridSize} size={1} />
+        <Background color={bgDotColor} gap={gridSize} size={1} />
         <Controls />
         <MiniMap
           nodeColor={minimapNodeColor}
-          maskColor="rgba(15, 17, 23, 0.7)"
-          style={{ background: '#1a1d27' }}
+          maskColor={minimapMaskColor}
+          style={{ background: minimapBg }}
         />
       </ReactFlow>
     </div>

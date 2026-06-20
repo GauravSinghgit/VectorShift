@@ -1,10 +1,11 @@
 // NodeBase.js
 // Shared visual shell for all nodes: accent bar, icon, title, status dot,
-// dynamic handle positioning, and a children slot for body content.
+// dynamic handle positioning, hover delete button, and a children slot.
 // ─────────────────────────────────────────────────────────────
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useStore } from '../store';
 
 /**
  * Props:
@@ -32,10 +33,18 @@ export const NodeBase = ({
   children,
   style = {},
 }) => {
+  const [hovered, setHovered] = useState(false);
+  const deleteNode = useStore((s) => s.deleteNode);
+
+  const handleDelete = useCallback((e) => {
+    e.stopPropagation();
+    deleteNode(id);
+  }, [id, deleteNode]);
+
   const maxHandles = Math.max(inputs.length, outputs.length, 1);
-  const headerHeight = 40;   // approximate px for header
-  const bodyMinHeight = 40;  // minimum body space
-  const handleSpacing = 24;  // px between handles
+  const headerHeight = 40;
+  const bodyMinHeight = 40;
+  const handleSpacing = 24;
   const minNodeHeight = headerHeight + bodyMinHeight + maxHandles * handleSpacing;
 
   return (
@@ -45,9 +54,22 @@ export const NodeBase = ({
         minHeight: `${minNodeHeight}px`,
         ...style,
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       {/* Accent bar */}
       <div className="node-accent-bar" style={{ background: accentColor }} />
+
+      {/* Delete button — appears on hover */}
+      {hovered && (
+        <button
+          className="node-delete-btn"
+          onClick={handleDelete}
+          title="Delete node"
+        >
+          ✕
+        </button>
+      )}
 
       {/* Header */}
       <div className="node-header">
